@@ -4,13 +4,16 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 
 /**
- * Convert to a float 3-array in a left-handed coordinate system.
+ * @old Convert to a float 3-array in a left-handed coordinate system.
  * Minecraft is right-handed by default, Mumble needs left-handed.
+ * (x, y, -z)
+ * 
+ * @new Now use MumbleLinkForge's coordinate system conversion: (x, z, y)
  *
  * @see <a href="https://wiki.mumble.info/wiki/Link#Coordinate_system">Coordinate system</a>
  */
 val Vec3d.toLHArray: FloatArray
-    get() = floatArrayOf(x.toFloat(), y.toFloat(), -z.toFloat())
+    get() = floatArrayOf(x.toFloat(), z.toFloat(), y.toFloat())
 
 /**
  * A stable hash function designed for world IDs.
