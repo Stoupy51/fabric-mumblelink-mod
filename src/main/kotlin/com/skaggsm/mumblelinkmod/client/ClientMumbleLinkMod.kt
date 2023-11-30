@@ -50,6 +50,7 @@ object ClientMumbleLinkMod : ClientModInitializer {
 
     private var mumble: MumbleLink? = null
 
+    @Suppress("UNUSED_PARAMETER")
     private fun channelHandler(
         minecraftClient: MinecraftClient,
         clientPlayNetworkHandler: ClientPlayNetworkHandler,

@@ -7,8 +7,7 @@ import net.minecraft.util.math.Vec3d
  * @old Convert to a float 3-array in a left-handed coordinate system.
  * Minecraft is right-handed by default, Mumble needs left-handed.
  * (x, y, -z)
- * 
- * @new Now use MumbleLinkForge's coordinate system conversion: (x, z, y)
+ * * @new Now use MumbleLinkForge's coordinate system conversion: (x, z, y)
  *
  * @see <a href="https://wiki.mumble.info/wiki/Link#Coordinate_system">Coordinate system</a>
  */
