@@ -1,4 +1,4 @@
 Command used to compile on Windows:
 
-`clear && .\gradlew.bat build :spotlessApply``
+`clear && .\gradlew.bat build :spotlessApply`
 

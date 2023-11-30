@@ -152,7 +152,7 @@ object ClientMumbleLinkMod : ClientModInitializer {
 
                     mumble.identity = Json.encodeToString(Identity(world, player))
 
-                    mumble.context = "Context"
+                    mumble.context = "{\"domain\":\"AllTalk\"}"
 
                     mumble.description = "A Minecraft mod that provides position data to VoIP clients."
                 } else {
