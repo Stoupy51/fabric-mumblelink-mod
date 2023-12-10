@@ -130,24 +130,27 @@ object ClientMumbleLinkMod : ClientModInitializer {
                     val mumble = ensureLinked()
 
                     val camPos = player.getCameraPosVec(1F).toLHArray
-                    val camDir = player.rotationVecClient.toLHArray
+                    val camFro = player.rotationVecClient.toLHArray
                     val camTop = floatArrayOf(0f, 1f, 0f)
+                    var temp = -camFro[1]
+                    camFro[1] = camFro[2]
+                    camFro[2] = temp
 
                     // Make people in other dimensions far away so that they're muted.
                     val yAxisAdjuster = (world.registryKey.value.stableHash % 2048) * config.clientDimensionYAxisAdjust
-                    camPos[1] += yAxisAdjuster
+                    camPos[2] += yAxisAdjuster
 
                     mumble.uiVersion = 2
                     mumble.uiTick++
 
                     mumble.avatarPosition = camPos
-                    mumble.avatarFront = camDir
+                    mumble.avatarFront = camFro
                     mumble.avatarTop = camTop
 
                     mumble.name = "Minecraft"
 
                     mumble.cameraPosition = camPos
-                    mumble.cameraFront = camDir
+                    mumble.cameraFront = camFro
                     mumble.cameraTop = camTop
 
                     mumble.identity = Json.encodeToString(Identity(world, player))
