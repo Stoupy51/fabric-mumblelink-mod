@@ -130,9 +130,8 @@ object ClientMumbleLinkMod : ClientModInitializer {
                     val mumble = ensureLinked()
 
                     val camPos = player.getCameraPosVec(1F).toRHArray	// Keep Minecraft's right-handed coordinate system
-                    val camFro = player.rotationVecClient.toLHArray		// Convert to Mumble's left-handed coordinate system
+                    val camFro = player.rotationVecClient.toLHArray // Convert to Mumble's left-handed coordinate system
                     val camTop = floatArrayOf(0f, 0f, 1f) // x, z, y
-                    // log camPos, camFro, camTop
 
                     // Make people in other dimensions far away so that they're muted.
                     val yAxisAdjuster = (world.registryKey.value.stableHash % 2048) * config.clientDimensionYAxisAdjust
