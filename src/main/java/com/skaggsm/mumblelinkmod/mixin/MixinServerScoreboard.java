@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Created by Mitchell Skaggs on 5/29/2019.
@@ -21,18 +20,8 @@ public class MixinServerScoreboard {
     @Final
     private MinecraftServer server;
 
-    @Inject(method = "addPlayerToTeam", at = @At(value = "RETURN", ordinal = 0))
-    private void onAddPlayerToTeam(String playerName, Team team, CallbackInfoReturnable<Boolean> cir) {
-        doOnScoreboardModify();
-    }
-
-    @Inject(method = "removePlayerFromTeam", at = @At("TAIL"))
-    private void onRemovePlayerFromTeam(String playerName, Team team, CallbackInfo ci) {
-        doOnScoreboardModify();
-    }
-
-    @Inject(method = "updateRemovedTeam", at = @At("TAIL"))
-    private void onUpdateRemovedTeam(Team team, CallbackInfo ci) {
+    @Inject(method = "updateScoreboardTeamAndPlayers", at = @At("TAIL"))
+    private void onUpdateScoreboardTeamAndPlayers(Team team, CallbackInfo ci) {
         doOnScoreboardModify();
     }
 
