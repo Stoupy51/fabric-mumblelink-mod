@@ -131,6 +131,7 @@ object ClientMumbleLinkMod : ClientModInitializer {
 
                     val camPos = player.getCameraPosVec(1F).toRHArray	// Keep Minecraft's right-handed coordinate system
                     val camFro = player.rotationVecClient.toLHArray // Convert to Mumble's left-handed coordinate system
+                    camFro[1] *= -1f // Mumble uses a left-handed coordinate system, so invert the y-axis.
                     val camTop = floatArrayOf(0f, 0f, 1f) // x, z, y
 
                     // Make people in other dimensions far away so that they're muted.
