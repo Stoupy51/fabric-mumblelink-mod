@@ -129,14 +129,23 @@ object ClientMumbleLinkMod : ClientModInitializer {
                 if (world != null && player != null) {
                     val mumble = ensureLinked()
 
-                    val camPos = player.getCameraPosVec(1F).toRHArray	// Keep Minecraft's right-handed coordinate system
-                    val camFro = player.rotationVecClient.toLHArray // Convert to Mumble's left-handed coordinate system
-                    camFro[1] *= -1f // Mumble uses a left-handed coordinate system, so invert the y-axis.
-                    val camTop = floatArrayOf(0f, 0f, 1f) // x, z, y
+                    // Forge implementation :
+                    // Vec3 position = game.player.getPosition(1f);
+                    // Vec3 lookDirection = game.player.getLookAngle();
+                    // Vec3 topDirection = game.player.getUpVector();
+		
+                    // Fabric implementation :
+                    val position = player.getCameraPosVec(1.0f)
+                    val lookDirection = player.rotationVecClient
+                    val topDirection = player.getOppositeRotationVector(1.0f)
+
+                    // Convert to right-handed coordinate system.
+                    val camPos = position.toRHArray
+                    val camFro = lookDirection.toRHArray
+                    val camTop = topDirection.toRHArray
 
                     // Make people in other dimensions far away so that they're muted.
-                    val yAxisAdjuster = (world.registryKey.value.stableHash % 2048) * config.clientDimensionYAxisAdjust
-                    camPos[2] += yAxisAdjuster
+                    camPos[2] += (world.registryKey.value.stableHash % 2048) * config.clientDimensionYAxisAdjust
 
                     mumble.uiVersion = 2
                     mumble.uiTick++
