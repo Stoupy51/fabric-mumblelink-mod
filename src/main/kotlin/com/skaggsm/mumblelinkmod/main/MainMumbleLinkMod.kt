@@ -8,13 +8,11 @@ import io.github.fablabsmc.fablabs.api.fiber.v1.serialization.FiberSerialization
 import io.github.fablabsmc.fablabs.api.fiber.v1.serialization.JanksonValueSerializer
 import io.github.fablabsmc.fablabs.api.fiber.v1.tree.ConfigBranch
 import io.github.fablabsmc.fablabs.api.fiber.v1.tree.ConfigTree
-import io.netty.buffer.Unpooled
 import me.shedaniel.fiber2cloth.api.Fiber2Cloth
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.RegistryKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
@@ -142,22 +140,19 @@ object MainMumbleLinkMod : ModInitializer {
 
         val templateParams: Array<Any> = arrayOf(dimId, dimNamespace, dimPath, teamName)
 
-        val userinfo: String = config.voipServerUserinfo
-        val host: String = config.voipServerHost
-        val port: Int = config.voipServerPort
         val path: String = MessageFormat.format(config.voipServerPath, *templateParams)
         val query: String = MessageFormat.format(config.voipServerQuery, *templateParams)
-        val fragment: String = config.voipServerFragment
 
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeEnumConstant(config.voipClient)
-        buf.writeString(userinfo)
-        buf.writeString(host)
-        buf.writeInt(port)
-        buf.writeString(path)
-        buf.writeString(query)
-        buf.writeString(fragment)
-
-        ServerPlayNetworking.send(player, SendMumbleURL.ID, buf)
+        // val payload = CustomPayload(SendMumbleURL.ID, buf)
+        val payload = SendMumbleURL(
+            config.voipClient,
+            config.voipServerUserinfo,
+            config.voipServerHost,
+            config.voipServerPort,
+            path,
+            query,
+            config.voipServerFragment
+        )
+        ServerPlayNetworking.send(player, payload)
     }
 }

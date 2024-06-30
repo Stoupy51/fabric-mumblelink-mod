@@ -2,8 +2,6 @@ package com.skaggsm.mumblelinkmod.client
 
 import com.skaggsm.jmumblelink.MumbleLink
 import com.skaggsm.jmumblelink.MumbleLinkImpl
-import com.skaggsm.mumblelinkmod.client.ClientConfig.AutoLaunchOption
-import com.skaggsm.mumblelinkmod.main.MainConfig
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod.LOG
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod.SERIALIZER
@@ -20,15 +18,8 @@ import net.fabricmc.api.EnvType.CLIENT
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.fabricmc.fabric.api.networking.v1.PacketSender
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.network.ClientPlayNetworkHandler
-import net.minecraft.network.PacketByteBuf
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import org.lwjgl.system.Platform
-import java.awt.Desktop
-import java.awt.GraphicsEnvironment
-import java.net.URI
-import java.net.URISyntaxException
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.StandardOpenOption.READ
@@ -49,34 +40,6 @@ object ClientMumbleLinkMod : ClientModInitializer {
     lateinit var unionConfigTree: ConfigBranch
 
     private var mumble: MumbleLink? = null
-
-    @Suppress("UNUSED_PARAMETER")
-    private fun channelHandler(
-        minecraftClient: MinecraftClient,
-        clientPlayNetworkHandler: ClientPlayNetworkHandler,
-        packetByteBuf: PacketByteBuf,
-        packetSender: PacketSender
-    ) {
-        if (config.clientAutoLaunchOption == AutoLaunchOption.IGNORE) return
-
-        val voipClient = packetByteBuf.readEnumConstant(MainConfig.VoipClient::class.java)
-        val userinfo = packetByteBuf.readString().ifEmpty { null }
-        val host = packetByteBuf.readString().ifEmpty { null }
-        val port = packetByteBuf.readInt()
-        val path = packetByteBuf.readString().ifEmpty { null }
-        val query = packetByteBuf.readString().ifEmpty { null }
-        val fragment = packetByteBuf.readString().ifEmpty { null }
-
-        try {
-            val uri = URI(voipClient.scheme, userinfo, host, port, path, query, fragment)
-            ensureNotHeadless()
-            Desktop.getDesktop().browse(uri)
-        } catch (e: URISyntaxException) {
-            LOG.warn("Ignoring invalid VoIP client URI \"${e.input}\"")
-        } catch (e: UnsupportedOperationException) {
-            LOG.warn("Unable to use the \"BROWSE\" intent to open your VoIP client automatically! Check that you aren't using a headless or server JVM.")
-        }
-    }
 
     /**
      * Runs after [MainMumbleLinkMod.onInitialize].
@@ -119,7 +82,9 @@ object ClientMumbleLinkMod : ClientModInitializer {
     }
 
     private fun setupEvents() {
-        ClientPlayNetworking.registerGlobalReceiver(SendMumbleURL.ID, ClientMumbleLinkMod::channelHandler)
+        PayloadTypeRegistry.playC2S().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
+        PayloadTypeRegistry.playS2C().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
+        ClientPlayNetworking.registerGlobalReceiver(SendMumbleURL.PACKET_ID, SendMumbleURL)
 
         ClientTickEvents.START_CLIENT_TICK.register(
             ClientTickEvents.StartTick {
@@ -193,15 +158,6 @@ object ClientMumbleLinkMod : ClientModInitializer {
             mumble?.close()
             mumble = null
             LOG.info("Unlinked")
-        }
-    }
-
-    private fun ensureNotHeadless() {
-        if (GraphicsEnvironment.isHeadless()) {
-            LOG.warn("Unable to unset headless earlier (are you using macOS?), doing it with nasty reflection now!")
-            val headlessField = GraphicsEnvironment::class.java.getDeclaredField("headless")
-            headlessField.isAccessible = true
-            headlessField[null] = false
         }
     }
 
