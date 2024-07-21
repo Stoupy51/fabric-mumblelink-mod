@@ -109,6 +109,11 @@ object MainMumbleLinkMod : ModInitializer {
     }
 
     private fun sendVoipPacket(player: ServerPlayerEntity, toWorld: RegistryKey<World> = player.world.registryKey) {
+        if (player.networkHandler == null) {
+            LOG.warn("Attempted to send VoIP packet to ${player.name.string} but their network handler is null. Skipping.")
+            return
+        }
+
         LOG.trace("Updating VoIP location for ${player.name.string}!")
 
         val dim = toWorld.value
