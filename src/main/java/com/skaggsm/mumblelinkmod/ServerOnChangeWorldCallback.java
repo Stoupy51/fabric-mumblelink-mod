@@ -12,18 +12,18 @@ import net.minecraft.world.World;
 
 public interface ServerOnChangeWorldCallback {
     Event<ServerOnChangeWorldCallback> EVENT = EventFactory.createArrayBacked(ServerOnChangeWorldCallback.class, (listeners) ->
-            EventFactory.isProfilingEnabled() ?
-                    (toDimension, player) -> {
-                        player.server.getProfiler().push("fabricServerOnChangeDimension");
-
-                        for (ServerOnChangeWorldCallback event : listeners) {
-                            player.server.getProfiler().push(EventFactory.getHandlerName(event));
-                            event.onChangeDimension(toDimension, player);
-                            player.server.getProfiler().pop();
-                        }
-
-                        player.server.getProfiler().pop();
-                    } :
+//            EventFactory.isProfilingEnabled() ?
+//                    (toDimension, player) -> {
+//                        player.server.getProfiler().push("fabricServerOnChangeDimension");
+//
+//                        for (ServerOnChangeWorldCallback event : listeners) {
+//                            player.server.getProfiler().push(EventFactory.getHandlerName(event));
+//                            event.onChangeDimension(toDimension, player);
+//                            player.server.getProfiler().pop();
+//                        }
+//
+//                        player.server.getProfiler().pop();
+//                    } :
                     (toDimension, player) -> {
                         for (ServerOnChangeWorldCallback event : listeners) {
                             event.onChangeDimension(toDimension, player);

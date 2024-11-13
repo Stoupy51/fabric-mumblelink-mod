@@ -11,7 +11,7 @@ plugins {
     java
     idea
     `maven-publish`
-    id("fabric-loom") version "1.6+"
+    id("fabric-loom") version "1.8+"
     id("com.github.ben-manes.versions") version "0.42.0"
     id("com.matthewprenger.cursegradle") version "1.4.0"
     id("com.modrinth.minotaur") version "2.+"

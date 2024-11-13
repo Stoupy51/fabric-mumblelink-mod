@@ -11,18 +11,18 @@ import net.minecraft.server.MinecraftServer;
 
 public interface ServerOnTeamsModify {
     Event<ServerOnTeamsModify> EVENT = EventFactory.createArrayBacked(ServerOnTeamsModify.class, (listeners) ->
-            EventFactory.isProfilingEnabled() ?
-                    (scoreboard, server) -> {
-                        server.getProfiler().push("fabricServerOnScoreboardUpdate");
-
-                        for (ServerOnTeamsModify event : listeners) {
-                            server.getProfiler().push(EventFactory.getHandlerName(event));
-                            event.onScoreboardModify(scoreboard, server);
-                            server.getProfiler().pop();
-                        }
-
-                        server.getProfiler().pop();
-                    } :
+//            EventFactory.isProfilingEnabled() ?
+//                    (scoreboard, server) -> {
+//                        server.getProfiler().push("fabricServerOnScoreboardUpdate");
+//
+//                        for (ServerOnTeamsModify event : listeners) {
+//                            server.getProfiler().push(EventFactory.getHandlerName(event));
+//                            event.onScoreboardModify(scoreboard, server);
+//                            server.getProfiler().pop();
+//                        }
+//
+//                        server.getProfiler().pop();
+//                    } :
                     (scoreboard, server) -> {
                         for (ServerOnTeamsModify event : listeners) {
                             event.onScoreboardModify(scoreboard, server);
