@@ -13,7 +13,7 @@ data class Identity(val name: String, val worldSpawn: IntArray, val dimension: S
             world.spawnPos.y,
             world.spawnPos.z
         ),
-        player.entityWorld.registryKey.value.toString()
+        player.world.registryKey.value.toString()
     )
 
     override fun equals(other: Any?): Boolean {
