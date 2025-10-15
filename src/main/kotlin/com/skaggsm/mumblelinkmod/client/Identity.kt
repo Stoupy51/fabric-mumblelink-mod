@@ -9,11 +9,11 @@ data class Identity(val name: String, val worldSpawn: IntArray, val dimension: S
     constructor(world: ClientWorld, player: ClientPlayerEntity) : this(
         player.displayName?.string ?: player.toString(),
         intArrayOf(
-            world.spawnPos.x,
-            world.spawnPos.y,
-            world.spawnPos.z
+            world.spawnPoint.pos.x,
+            world.spawnPoint.pos.y,
+            world.spawnPoint.pos.z
         ),
-        player.world.registryKey.value.toString()
+        player.entityWorld.registryKey.value.toString()
     )
 
     override fun equals(other: Any?): Boolean {

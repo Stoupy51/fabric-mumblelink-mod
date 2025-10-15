@@ -108,7 +108,7 @@ object MainMumbleLinkMod : ModInitializer {
         server.playerManager.playerList.forEach { sendVoipPacket(it) }
     }
 
-    private fun sendVoipPacket(player: ServerPlayerEntity, toWorld: RegistryKey<World> = player.world.registryKey) {
+    private fun sendVoipPacket(player: ServerPlayerEntity, toWorld: RegistryKey<World> = player.entityWorld.registryKey) {
         if (player.networkHandler == null) {
             LOG.warn("Attempted to send VoIP packet to ${player.name.string} but their network handler is null. Skipping.")
             return
