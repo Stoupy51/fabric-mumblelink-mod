@@ -14,6 +14,6 @@ class ClientConfig {
 
     enum class AutoLaunchOption {
         IGNORE, // PROMPT,
-        ACCEPT
+        ACCEPT,
     }
 }

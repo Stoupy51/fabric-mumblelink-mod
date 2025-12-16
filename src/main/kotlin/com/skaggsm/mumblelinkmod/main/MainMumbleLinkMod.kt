@@ -50,7 +50,12 @@ object MainMumbleLinkMod : ModInitializer {
     private fun setupConfig() {
         config = MainConfig()
 
-        configTree = ConfigTree.builder().applyFromPojo(config, createSettings()).withName("main").build()
+        configTree =
+            ConfigTree
+                .builder()
+                .applyFromPojo(config, createSettings())
+                .withName("main")
+                .build()
 
         if (Files.notExists(configFile)) {
             serialize()
@@ -72,7 +77,7 @@ object MainMumbleLinkMod : ModInitializer {
         FiberSerialization.serialize(
             configTree,
             Files.newOutputStream(configFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE),
-            SERIALIZER
+            SERIALIZER,
         )
     }
 
@@ -80,7 +85,7 @@ object MainMumbleLinkMod : ModInitializer {
         FiberSerialization.deserialize(
             configTree,
             Files.newInputStream(configFile, StandardOpenOption.READ),
-            SERIALIZER
+            SERIALIZER,
         )
     }
 
@@ -88,19 +93,19 @@ object MainMumbleLinkMod : ModInitializer {
         ServerOnConnectCallback.EVENT.register(
             ServerOnConnectCallback { player ->
                 sendVoipPacket(player)
-            }
+            },
         )
 
         ServerOnChangeWorldCallback.EVENT.register(
             ServerOnChangeWorldCallback { toWorld, player ->
                 sendVoipPacket(player, toWorld)
-            }
+            },
         )
 
         ServerOnTeamsModify.EVENT.register(
             ServerOnTeamsModify { _, server ->
                 sendAllVoipPackets(server)
-            }
+            },
         )
     }
 
@@ -108,7 +113,10 @@ object MainMumbleLinkMod : ModInitializer {
         server.playerManager.playerList.forEach { sendVoipPacket(it) }
     }
 
-    private fun sendVoipPacket(player: ServerPlayerEntity, toWorld: RegistryKey<World> = player.entityWorld.registryKey) {
+    private fun sendVoipPacket(
+        player: ServerPlayerEntity,
+        toWorld: RegistryKey<World> = player.entityWorld.registryKey,
+    ) {
         if (player.networkHandler == null) {
             LOG.warn("Attempted to send VoIP packet to ${player.name.string} but their network handler is null. Skipping.")
             return
@@ -117,28 +125,30 @@ object MainMumbleLinkMod : ModInitializer {
         LOG.trace("Updating VoIP location for ${player.name.string}!")
 
         val dim = toWorld.value
-        val dimNamespace = dim.namespace.split('_').joinToString(" ") {
-            it.replaceFirstChar { c ->
-                if (c.isLowerCase()) {
-                    c.titlecase(
-                        Locale.getDefault()
-                    )
-                } else {
-                    c.toString()
+        val dimNamespace =
+            dim.namespace.split('_').joinToString(" ") {
+                it.replaceFirstChar { c ->
+                    if (c.isLowerCase()) {
+                        c.titlecase(
+                            Locale.getDefault(),
+                        )
+                    } else {
+                        c.toString()
+                    }
                 }
             }
-        }
-        val dimPath = dim.path.split('_').joinToString(" ") {
-            it.replaceFirstChar { c ->
-                if (c.isLowerCase()) {
-                    c.titlecase(
-                        Locale.getDefault()
-                    )
-                } else {
-                    c.toString()
+        val dimPath =
+            dim.path.split('_').joinToString(" ") {
+                it.replaceFirstChar { c ->
+                    if (c.isLowerCase()) {
+                        c.titlecase(
+                            Locale.getDefault(),
+                        )
+                    } else {
+                        c.toString()
+                    }
                 }
             }
-        }
         val dimId = "$dimNamespace $dimPath"
 
         val teamName = player.scoreboardTeam?.name ?: ""
@@ -149,15 +159,16 @@ object MainMumbleLinkMod : ModInitializer {
         val query: String = MessageFormat.format(config.voipServerQuery, *templateParams)
 
         // val payload = CustomPayload(SendMumbleURL.ID, buf)
-        val payload = SendMumbleURL(
-            config.voipClient,
-            config.voipServerUserinfo,
-            config.voipServerHost,
-            config.voipServerPort,
-            path,
-            query,
-            config.voipServerFragment
-        )
+        val payload =
+            SendMumbleURL(
+                config.voipClient,
+                config.voipServerUserinfo,
+                config.voipServerHost,
+                config.voipServerPort,
+                path,
+                query,
+                config.voipServerFragment,
+            )
         ServerPlayNetworking.send(player, payload)
     }
 }

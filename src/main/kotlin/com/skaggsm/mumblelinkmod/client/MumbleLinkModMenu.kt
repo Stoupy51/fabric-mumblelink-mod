@@ -13,14 +13,15 @@ import net.fabricmc.api.Environment
  */
 @Environment(EnvType.CLIENT)
 class MumbleLinkModMenu : ModMenuApi {
-
-    override fun getModConfigScreenFactory() = ConfigScreenFactory {
-        val t = Fiber2Cloth.create(it, MODID, ClientMumbleLinkMod.unionConfigTree, "config.fabric-mumblelink-mod.title")
-            .setSaveRunnable {
-                MainMumbleLinkMod.serialize()
-                ClientMumbleLinkMod.serialize()
-            }
-            .build()
-        t.screen
-    }
+    override fun getModConfigScreenFactory() =
+        ConfigScreenFactory {
+            val t =
+                Fiber2Cloth
+                    .create(it, MODID, ClientMumbleLinkMod.unionConfigTree, "config.fabric-mumblelink-mod.title")
+                    .setSaveRunnable {
+                        MainMumbleLinkMod.serialize()
+                        ClientMumbleLinkMod.serialize()
+                    }.build()
+            t.screen
+        }
 }

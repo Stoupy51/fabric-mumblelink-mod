@@ -24,14 +24,16 @@ data class SendMumbleURL(
     val port: Int,
     val path: String,
     val query: String,
-    val fragment: String
+    val fragment: String,
 ) : CustomPayload {
-
     companion object : ClientPlayNetworking.PlayPayloadHandler<SendMumbleURL> {
         val PACKET_ID = CustomPayload.Id<SendMumbleURL>(Identifier.of(MODID, "broadcast_mumble_url_v2"))
         val PACKET_CODEC: PacketCodec<RegistryByteBuf, SendMumbleURL> = PacketCodec.of(::encode, ::decode)
 
-        private fun encode(packet: SendMumbleURL, buf: RegistryByteBuf) {
+        private fun encode(
+            packet: SendMumbleURL,
+            buf: RegistryByteBuf,
+        ) {
             buf.writeEnumConstant(packet.voipClient)
             buf.writeString(packet.userinfo)
             buf.writeString(packet.host)
@@ -41,17 +43,16 @@ data class SendMumbleURL(
             buf.writeString(packet.fragment)
         }
 
-        private fun decode(buf: RegistryByteBuf): SendMumbleURL {
-            return SendMumbleURL(
+        private fun decode(buf: RegistryByteBuf): SendMumbleURL =
+            SendMumbleURL(
                 buf.readEnumConstant(MainConfig.VoipClient::class.java),
                 buf.readString().ifEmpty { "" },
                 buf.readString().ifEmpty { "" },
                 buf.readInt(),
                 buf.readString().ifEmpty { "" },
                 buf.readString().ifEmpty { "" },
-                buf.readString().ifEmpty { "" }
+                buf.readString().ifEmpty { "" },
             )
-        }
 
         private fun ensureNotHeadless() {
             if (GraphicsEnvironment.isHeadless()) {
@@ -62,7 +63,10 @@ data class SendMumbleURL(
             }
         }
 
-        override fun receive(payload: SendMumbleURL, context: ClientPlayNetworking.Context) {
+        override fun receive(
+            payload: SendMumbleURL,
+            context: ClientPlayNetworking.Context,
+        ) {
             if (ClientMumbleLinkMod.config.clientAutoLaunchOption == AutoLaunchOption.IGNORE) return
 
             val voipClient = payload.voipClient
@@ -80,12 +84,12 @@ data class SendMumbleURL(
             } catch (e: URISyntaxException) {
                 LOG.warn("Ignoring invalid VoIP client URI \"${e.input}\"")
             } catch (e: UnsupportedOperationException) {
-                LOG.warn("Unable to use the \"BROWSE\" intent to open your VoIP client automatically! Check that you aren't using a headless or server JVM.")
+                LOG.warn(
+                    "Unable to use the \"BROWSE\" intent to open your VoIP client automatically! Check that you aren't using a headless or server JVM.",
+                )
             }
         }
     }
 
-    override fun getId(): CustomPayload.Id<out CustomPayload> {
-        return PACKET_ID
-    }
+    override fun getId(): CustomPayload.Id<out CustomPayload> = PACKET_ID
 }

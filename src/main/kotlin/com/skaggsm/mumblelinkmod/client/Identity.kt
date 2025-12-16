@@ -5,15 +5,20 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 
 @Serializable
-data class Identity(val name: String, val worldSpawn: IntArray, val dimension: String) {
+data class Identity(
+    val name: String,
+    val worldSpawn: IntArray,
+    val dimension: String,
+) {
     constructor(world: ClientWorld, player: ClientPlayerEntity) : this(
         player.displayName?.string ?: player.toString(),
         intArrayOf(
             world.spawnPoint.pos.x,
             world.spawnPoint.pos.y,
-            world.spawnPoint.pos.z
+            world.spawnPoint.pos.z,
         ),
-        player.entityWorld.registryKey.value.toString()
+        player.entityWorld.registryKey.value
+            .toString(),
     )
 
     override fun equals(other: Any?): Boolean {

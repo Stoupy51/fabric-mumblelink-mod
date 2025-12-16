@@ -4,7 +4,6 @@ import me.shedaniel.fiber2cloth.api.ClothSetting
 import me.shedaniel.fiber2cloth.api.ClothSetting.EnumHandler.EnumDisplayOption
 
 class MainConfig {
-
     /**
      * Used for the "scheme" part of the URI.
      */
@@ -42,8 +41,10 @@ class MainConfig {
      */
     var voipServerFragment: String = ""
 
-    enum class VoipClient(val scheme: String) {
+    enum class VoipClient(
+        val scheme: String,
+    ) {
         MUMBLE("mumble"),
-        TEAMSPEAK("ts3server");
+        TEAMSPEAK("ts3server"),
     }
 }

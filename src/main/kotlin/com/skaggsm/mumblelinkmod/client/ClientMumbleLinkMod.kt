@@ -52,7 +52,12 @@ object ClientMumbleLinkMod : ClientModInitializer {
     private fun setupConfig() {
         config = ClientConfig()
 
-        configTree = ConfigTree.builder().applyFromPojo(config, createSettings()).withName("client").build()
+        configTree =
+            ConfigTree
+                .builder()
+                .applyFromPojo(config, createSettings())
+                .withName("client")
+                .build()
         unionConfigTree = ConfigBranchImpl("union", null)
         unionConfigTree.items.add(configTree)
         unionConfigTree.items.add(MainMumbleLinkMod.configTree)
@@ -69,7 +74,7 @@ object ClientMumbleLinkMod : ClientModInitializer {
         FiberSerialization.serialize(
             configTree,
             Files.newOutputStream(configFile, WRITE, CREATE),
-            SERIALIZER
+            SERIALIZER,
         )
     }
 
@@ -77,7 +82,7 @@ object ClientMumbleLinkMod : ClientModInitializer {
         FiberSerialization.deserialize(
             configTree,
             Files.newInputStream(configFile, READ),
-            SERIALIZER
+            SERIALIZER,
         )
     }
 
@@ -133,7 +138,7 @@ object ClientMumbleLinkMod : ClientModInitializer {
                 } else {
                     ensureClosed()
                 }
-            }
+            },
         )
     }
 

@@ -1,23 +1,18 @@
 @file:Suppress("PropertyName")
 
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-import com.matthewprenger.cursegradle.CurseArtifact
-import com.matthewprenger.cursegradle.CurseProject
-import com.matthewprenger.cursegradle.CurseRelation
-import com.matthewprenger.cursegradle.Options
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
     idea
     `maven-publish`
-    id("fabric-loom") version "1.11.0+"
+    id("fabric-loom") version "1.14.0+"
     id("com.github.ben-manes.versions") version "0.42.0"
-    id("com.matthewprenger.cursegradle") version "1.4.0"
     id("com.modrinth.minotaur") version "2.+"
-    id("com.diffplug.spotless") version "6.11.0"
-    kotlin("jvm") version "2.1.20"
-    kotlin("plugin.serialization") version "2.1.20"
+    id("com.diffplug.spotless") version "7.+"
+    kotlin("jvm") version "2.2.21"
+    kotlin("plugin.serialization") version "2.2.21"
     id("org.shipkit.shipkit-auto-version") version "1.+"
     id("org.shipkit.shipkit-changelog") version "1.+"
     id("org.shipkit.shipkit-github-release") version "1.+"
@@ -51,7 +46,6 @@ repositories {
     }
 }
 
-val curseforge_id: String by project
 val modrinth_id: String by project
 val archives_base_name: String by project
 val maven_group: String by project
@@ -104,12 +98,12 @@ dependencies {
 
 tasks.processResources {
     inputs.properties(
-        "version" to project.version
+        "version" to project.version,
     )
 
     filesMatching("fabric.mod.json") {
         expand(
-            "version" to project.version
+            "version" to project.version,
         )
     }
 }
@@ -125,8 +119,8 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "21"
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
     }
 }
 
@@ -173,47 +167,6 @@ tasks.githubRelease {
     newTagRevision = System.getenv("GITHUB_SHA")
 }
 
-// Configure CurseForge publishing
-curseforge {
-    // Stored in ~/.gradle/gradle.properties
-    when {
-        project.hasProperty("curseApiKey") -> apiKey = project.ext["curseApiKey"]
-        System.getenv("CURSE_API_KEY") != null -> apiKey = System.getenv("CURSE_API_KEY")
-        else -> println("No CurseForge API key found, \'curseforge\' tasks will not work")
-    }
-
-    project(
-        closureOf<CurseProject> {
-            id = curseforge_id
-            releaseType = "release"
-            addGameVersion(minecraft_version)
-            addGameVersion("Fabric")
-            changelog =
-                "View the latest changelog here: https://github.com/magneticflux-/fabric-mumblelink-mod/releases"
-            mainArtifact(
-                tasks.remapJar.get(),
-                closureOf<CurseArtifact> {
-                    relations(
-                        closureOf<CurseRelation> {
-                            requiredDependency("fabric-api")
-                            embeddedLibrary("fabric-language-kotlin")
-                            embeddedLibrary("cloth-config")
-                            embeddedLibrary("fiber2cloth")
-                            optionalDependency("modmenu")
-                        }
-                    )
-                }
-            )
-            addArtifact(tasks["sourcesJar"])
-        }
-    )
-    options(
-        closureOf<Options> {
-            forgeGradleIntegration = false
-        }
-    )
-}
-
 modrinth {
     // Stored in ~/.gradle/gradle.properties
     when {
@@ -237,19 +190,16 @@ modrinth {
 
 spotless {
     kotlin {
-        ktlint("0.47.1")
+        ktlint("1.8.+")
     }
     kotlinGradle {
-        ktlint("0.47.1")
+        ktlint("1.8.+")
     }
 }
 
 afterEvaluate {
-    // CurseGradle generates tasks in afterEvaluate for each project
-    // There isn't really any other way to make it depend on a task unless it is an AbstractArchiveTask
-    val curseforgeTask = tasks.getByName("curseforge$curseforge_id")
     val modrinthTask = tasks.modrinth
     tasks.publish {
-        dependsOn(curseforgeTask, modrinthTask)
+        dependsOn(modrinthTask)
     }
 }
