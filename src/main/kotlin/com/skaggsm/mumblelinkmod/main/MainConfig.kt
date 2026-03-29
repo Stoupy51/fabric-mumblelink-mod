@@ -1,13 +1,12 @@
 package com.skaggsm.mumblelinkmod.main
 
-import me.shedaniel.fiber2cloth.api.ClothSetting
-import me.shedaniel.fiber2cloth.api.ClothSetting.EnumHandler.EnumDisplayOption
+import kotlinx.serialization.Serializable
 
+@Serializable
 class MainConfig {
     /**
      * Used for the "scheme" part of the URI.
      */
-    @ClothSetting.EnumHandler(EnumDisplayOption.DROPDOWN)
     var voipClient: VoipClient = VoipClient.MUMBLE
 
     /**
@@ -41,6 +40,7 @@ class MainConfig {
      */
     var voipServerFragment: String = ""
 
+    @Serializable
     enum class VoipClient(
         val scheme: String,
     ) {

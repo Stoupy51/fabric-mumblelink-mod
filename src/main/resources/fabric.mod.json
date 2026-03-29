@@ -37,13 +37,10 @@
       "com.skaggsm.mumblelinkmod.client.MumbleLinkModMenu"
     ]
   },
-  "mixins": [
-    "fabric-mumblelink-mod.mixins.json"
-  ],
   "depends": {
-    "fabricloader": ">=0.14.0",
-    "fabric": ">=0.57.0",
-    "minecraft": "1.21.x"
+    "fabricloader": ">=0.18.5",
+    "fabric-api": ">=0.144.3+26.1",
+    "minecraft": "26.1.x"
   },
   "suggests": {
     "modmenu": ">=4.0.0"

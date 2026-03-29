@@ -1,7 +1,6 @@
 package com.skaggsm.mumblelinkmod.client
 
 import com.skaggsm.mumblelinkmod.client.ClientConfig.AutoLaunchOption
-import com.skaggsm.mumblelinkmod.main.MainConfig
 import com.skaggsm.mumblelinkmod.main.MainConfig.VoipClient
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod.LOG
@@ -9,14 +8,10 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory
 import com.terraformersmc.modmenu.api.ModMenuApi
 import me.shedaniel.clothconfig2.api.ConfigBuilder
 import me.shedaniel.clothconfig2.api.ConfigCategory
-import me.shedaniel.clothconfig2.api.ConfigEntryBuilder
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Component
 
-/**
- * Created by Mitchell Skaggs on 5/30/2019.
- */
 @Environment(EnvType.CLIENT)
 class MumbleLinkModMenu : ModMenuApi {
     override fun getModConfigScreenFactory() =
@@ -26,7 +21,7 @@ class MumbleLinkModMenu : ModMenuApi {
                     ConfigBuilder
                         .create()
                         .setParentScreen(parent)
-                        .setTitle(Text.translatable("config.fabric-mumblelink-mod.title"))
+                        .setTitle(Component.translatable("config.fabric-mumblelink-mod.title"))
                         .setSavingRunnable {
                             MainMumbleLinkMod.serialize()
                             ClientMumbleLinkMod.serialize()
@@ -34,16 +29,15 @@ class MumbleLinkModMenu : ModMenuApi {
 
                 val entryBuilder = builder.entryBuilder()
 
-                // Client category
                 val clientCategory: ConfigCategory =
                     builder.getOrCreateCategory(
-                        Text.translatable("config.fabric-mumblelink-mod.client"),
+                        Component.translatable("config.fabric-mumblelink-mod.client"),
                     )
 
                 clientCategory.addEntry(
                     entryBuilder
                         .startEnumSelector(
-                            Text.translatable("config.fabric-mumblelink-mod.clientAutoLaunchOption"),
+                            Component.translatable("config.fabric-mumblelink-mod.clientAutoLaunchOption"),
                             AutoLaunchOption::class.java,
                             ClientMumbleLinkMod.config.clientAutoLaunchOption,
                         ).setDefaultValue(AutoLaunchOption.ACCEPT)
@@ -54,23 +48,22 @@ class MumbleLinkModMenu : ModMenuApi {
                 clientCategory.addEntry(
                     entryBuilder
                         .startFloatField(
-                            Text.translatable("config.fabric-mumblelink-mod.clientDimensionYAxisAdjust"),
+                            Component.translatable("config.fabric-mumblelink-mod.clientDimensionYAxisAdjust"),
                             ClientMumbleLinkMod.config.clientDimensionYAxisAdjust,
                         ).setDefaultValue(0.0f)
                         .setSaveConsumer { ClientMumbleLinkMod.config.clientDimensionYAxisAdjust = it }
                         .build(),
                 )
 
-                // Server category
                 val serverCategory: ConfigCategory =
                     builder.getOrCreateCategory(
-                        Text.translatable("config.fabric-mumblelink-mod.main"),
+                        Component.translatable("config.fabric-mumblelink-mod.main"),
                     )
 
                 serverCategory.addEntry(
                     entryBuilder
                         .startEnumSelector(
-                            Text.translatable("config.fabric-mumblelink-mod.voipClient"),
+                            Component.translatable("config.fabric-mumblelink-mod.voipClient"),
                             VoipClient::class.java,
                             MainMumbleLinkMod.config.voipClient,
                         ).setDefaultValue(VoipClient.MUMBLE)
@@ -81,7 +74,7 @@ class MumbleLinkModMenu : ModMenuApi {
                 serverCategory.addEntry(
                     entryBuilder
                         .startStrField(
-                            Text.translatable("config.fabric-mumblelink-mod.voipServerUserinfo"),
+                            Component.translatable("config.fabric-mumblelink-mod.voipServerUserinfo"),
                             MainMumbleLinkMod.config.voipServerUserinfo,
                         ).setDefaultValue("")
                         .setSaveConsumer { MainMumbleLinkMod.config.voipServerUserinfo = it }
@@ -91,7 +84,7 @@ class MumbleLinkModMenu : ModMenuApi {
                 serverCategory.addEntry(
                     entryBuilder
                         .startStrField(
-                            Text.translatable("config.fabric-mumblelink-mod.voipServerHost"),
+                            Component.translatable("config.fabric-mumblelink-mod.voipServerHost"),
                             MainMumbleLinkMod.config.voipServerHost,
                         ).setDefaultValue("")
                         .setSaveConsumer { MainMumbleLinkMod.config.voipServerHost = it }
@@ -101,7 +94,7 @@ class MumbleLinkModMenu : ModMenuApi {
                 serverCategory.addEntry(
                     entryBuilder
                         .startIntField(
-                            Text.translatable("config.fabric-mumblelink-mod.voipServerPort"),
+                            Component.translatable("config.fabric-mumblelink-mod.voipServerPort"),
                             MainMumbleLinkMod.config.voipServerPort,
                         ).setDefaultValue(-1)
                         .setSaveConsumer { MainMumbleLinkMod.config.voipServerPort = it }
@@ -111,7 +104,7 @@ class MumbleLinkModMenu : ModMenuApi {
                 serverCategory.addEntry(
                     entryBuilder
                         .startStrField(
-                            Text.translatable("config.fabric-mumblelink-mod.voipServerPath"),
+                            Component.translatable("config.fabric-mumblelink-mod.voipServerPath"),
                             MainMumbleLinkMod.config.voipServerPath,
                         ).setDefaultValue("")
                         .setSaveConsumer { MainMumbleLinkMod.config.voipServerPath = it }
@@ -121,7 +114,7 @@ class MumbleLinkModMenu : ModMenuApi {
                 serverCategory.addEntry(
                     entryBuilder
                         .startStrField(
-                            Text.translatable("config.fabric-mumblelink-mod.voipServerQuery"),
+                            Component.translatable("config.fabric-mumblelink-mod.voipServerQuery"),
                             MainMumbleLinkMod.config.voipServerQuery,
                         ).setDefaultValue("")
                         .setSaveConsumer { MainMumbleLinkMod.config.voipServerQuery = it }
@@ -131,7 +124,7 @@ class MumbleLinkModMenu : ModMenuApi {
                 serverCategory.addEntry(
                     entryBuilder
                         .startStrField(
-                            Text.translatable("config.fabric-mumblelink-mod.voipServerFragment"),
+                            Component.translatable("config.fabric-mumblelink-mod.voipServerFragment"),
                             MainMumbleLinkMod.config.voipServerFragment,
                         ).setDefaultValue("")
                         .setSaveConsumer { MainMumbleLinkMod.config.voipServerFragment = it }

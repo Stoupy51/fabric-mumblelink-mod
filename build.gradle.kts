@@ -7,12 +7,12 @@ plugins {
     java
     idea
     `maven-publish`
-    id("fabric-loom") version "1.14.0+"
+    id("net.fabricmc.fabric-loom") version "1.15.+"
     id("com.github.ben-manes.versions") version "0.42.0"
     id("com.modrinth.minotaur") version "2.+"
     id("com.diffplug.spotless") version "7.+"
-    kotlin("jvm") version "2.2.21"
-    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("jvm") version "2.3.20"
+    kotlin("plugin.serialization") version "2.3.20"
     id("org.shipkit.shipkit-auto-version") version "1.+"
     id("org.shipkit.shipkit-changelog") version "1.+"
     id("org.shipkit.shipkit-github-release") version "1.+"
@@ -50,13 +50,10 @@ val modrinth_id: String by project
 val archives_base_name: String by project
 val maven_group: String by project
 val minecraft_version: String by project
-val yarn_mappings: String by project
 val loader_version: String by project
 val fabric_version: String by project
 val kotlin_version: String by project
 val cloth_config_version: String by project
-val fiber_2_cloth_version: String by project
-val fiber_version: String by project
 val modmenu_version: String by project
 
 base {
@@ -70,25 +67,17 @@ loom {
 dependencies {
     // to change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:$minecraft_version")
-    mappings("net.fabricmc:yarn:$yarn_mappings:v2")
-    modImplementation("net.fabricmc:fabric-loader:$loader_version")
+    implementation("net.fabricmc:fabric-loader:$loader_version")
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation("net.fabricmc.fabric-api:fabric-api:$fabric_version")
+    implementation("net.fabricmc.fabric-api:fabric-api:$fabric_version")
 
-    modImplementation("net.fabricmc:fabric-language-kotlin:$kotlin_version")
+    implementation("net.fabricmc:fabric-language-kotlin:$kotlin_version")
     include("net.fabricmc:fabric-language-kotlin:$kotlin_version")
 
-    modImplementation("com.terraformersmc:modmenu:$modmenu_version")
-
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:$cloth_config_version")
+    compileOnly("com.terraformersmc:modmenu:$modmenu_version")
+    implementation("me.shedaniel.cloth:cloth-config-fabric:$cloth_config_version")
     include("me.shedaniel.cloth:cloth-config-fabric:$cloth_config_version")
-
-    modImplementation("me.shedaniel.cloth:fiber2cloth:$fiber_2_cloth_version")
-    include("me.shedaniel.cloth:fiber2cloth:$fiber_2_cloth_version")
-
-    modImplementation("me.zeroeightsix:fiber:$fiber_version")
-    include("me.zeroeightsix:fiber:$fiber_version")
 
     include("com.skaggsm:java-mumble-link:0.2.6")
     implementation("com.skaggsm:java-mumble-link:0.2.6")
@@ -114,19 +103,21 @@ tasks.withType<JavaCompile> {
     // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
     // If Javadoc is generated, this must be specified in that task too.
     options.encoding = "UTF-8"
-    // Minecraft 1.21 (21w19a) upwards uses Java 21.
-    options.release.set(21)
+    options.release.set(25)
 }
 
 tasks.withType<KotlinCompile> {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        jvmTarget.set(
+            org.jetbrains.kotlin.gradle.dsl.JvmTarget
+                .fromTarget("25"),
+        )
     }
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.
     // If you remove this line, sources will not be generated.
@@ -177,8 +168,8 @@ modrinth {
     projectId.set(modrinth_id)
     versionNumber.set(version.toString())
     gameVersions.add(minecraft_version)
-    uploadFile.set(tasks.remapJar as Any)
-    additionalFiles.add(tasks.remapSourcesJar as Any)
+    uploadFile.set(tasks.named("jar") as Any)
+    additionalFiles.add(tasks.named("sourcesJar") as Any)
     loaders.addAll("fabric", "quilt")
     dependencies {
         required.project("fabric-api")

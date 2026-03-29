@@ -1,8 +1,8 @@
 package com.skaggsm.mumblelinkmod.client
 
 import kotlinx.serialization.Serializable
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.world.ClientWorld
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.player.LocalPlayer
 
 @Serializable
 data class Identity(
@@ -10,15 +10,14 @@ data class Identity(
     val worldSpawn: IntArray,
     val dimension: String,
 ) {
-    constructor(world: ClientWorld, player: ClientPlayerEntity) : this(
-        player.displayName?.string ?: player.toString(),
+    constructor(world: ClientLevel, player: LocalPlayer) : this(
+        player.name.string,
         intArrayOf(
-            world.spawnPoint.pos.x,
-            world.spawnPoint.pos.y,
-            world.spawnPoint.pos.z,
+            player.blockPosition().x,
+            player.blockPosition().y,
+            player.blockPosition().z,
         ),
-        player.entityWorld.registryKey.value
-            .toString(),
+        world.dimension().toString(),
     )
 
     override fun equals(other: Any?): Boolean {

@@ -5,10 +5,10 @@ import com.skaggsm.mumblelinkmod.client.ClientMumbleLinkMod
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod.LOG
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod.MODID
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.minecraft.network.RegistryByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.packet.CustomPayload
-import net.minecraft.util.Identifier
+import net.minecraft.network.RegistryFriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
+import net.minecraft.resources.Identifier
 import java.awt.Desktop
 import java.awt.GraphicsEnvironment
 import java.net.URI
@@ -25,33 +25,33 @@ data class SendMumbleURL(
     val path: String,
     val query: String,
     val fragment: String,
-) : CustomPayload {
-    companion object : ClientPlayNetworking.PlayPayloadHandler<SendMumbleURL> {
-        val PACKET_ID = CustomPayload.Id<SendMumbleURL>(Identifier.of(MODID, "broadcast_mumble_url_v2"))
-        val PACKET_CODEC: PacketCodec<RegistryByteBuf, SendMumbleURL> = PacketCodec.of(::encode, ::decode)
+) : CustomPacketPayload {
+    companion object {
+        val PACKET_ID = CustomPacketPayload.Type<SendMumbleURL>(Identifier.fromNamespaceAndPath(MODID, "broadcast_mumble_url_v2"))
+        val PACKET_CODEC: StreamCodec<RegistryFriendlyByteBuf, SendMumbleURL> = CustomPacketPayload.codec(SendMumbleURL::encode, ::decode)
 
         private fun encode(
             packet: SendMumbleURL,
-            buf: RegistryByteBuf,
+            buf: RegistryFriendlyByteBuf,
         ) {
-            buf.writeEnumConstant(packet.voipClient)
-            buf.writeString(packet.userinfo)
-            buf.writeString(packet.host)
+            buf.writeEnum(packet.voipClient)
+            buf.writeUtf(packet.userinfo)
+            buf.writeUtf(packet.host)
             buf.writeInt(packet.port)
-            buf.writeString(packet.path)
-            buf.writeString(packet.query)
-            buf.writeString(packet.fragment)
+            buf.writeUtf(packet.path)
+            buf.writeUtf(packet.query)
+            buf.writeUtf(packet.fragment)
         }
 
-        private fun decode(buf: RegistryByteBuf): SendMumbleURL =
+        private fun decode(buf: RegistryFriendlyByteBuf): SendMumbleURL =
             SendMumbleURL(
-                buf.readEnumConstant(MainConfig.VoipClient::class.java),
-                buf.readString().ifEmpty { "" },
-                buf.readString().ifEmpty { "" },
+                buf.readEnum(MainConfig.VoipClient::class.java),
+                buf.readUtf().ifEmpty { "" },
+                buf.readUtf().ifEmpty { "" },
                 buf.readInt(),
-                buf.readString().ifEmpty { "" },
-                buf.readString().ifEmpty { "" },
-                buf.readString().ifEmpty { "" },
+                buf.readUtf().ifEmpty { "" },
+                buf.readUtf().ifEmpty { "" },
+                buf.readUtf().ifEmpty { "" },
             )
 
         private fun ensureNotHeadless() {
@@ -63,7 +63,7 @@ data class SendMumbleURL(
             }
         }
 
-        override fun receive(
+        fun receive(
             payload: SendMumbleURL,
             context: ClientPlayNetworking.Context,
         ) {
@@ -91,5 +91,5 @@ data class SendMumbleURL(
         }
     }
 
-    override fun getId(): CustomPayload.Id<out CustomPayload> = PACKET_ID
+    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload> = PACKET_ID
 }

@@ -4,13 +4,8 @@ import com.skaggsm.jmumblelink.MumbleLink
 import com.skaggsm.jmumblelink.MumbleLinkImpl
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod
 import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod.LOG
-import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod.SERIALIZER
-import com.skaggsm.mumblelinkmod.main.MainMumbleLinkMod.createSettings
 import com.skaggsm.mumblelinkmod.main.SendMumbleURL
-import io.github.fablabsmc.fablabs.api.fiber.v1.serialization.FiberSerialization
-import io.github.fablabsmc.fablabs.api.fiber.v1.tree.ConfigBranch
-import io.github.fablabsmc.fablabs.api.fiber.v1.tree.ConfigTree
-import io.github.fablabsmc.fablabs.impl.fiber.tree.ConfigBranchImpl
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.fabricmc.api.ClientModInitializer
@@ -22,7 +17,6 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import org.lwjgl.system.Platform
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption.CREATE
-import java.nio.file.StandardOpenOption.READ
 import java.nio.file.StandardOpenOption.WRITE
 import kotlin.io.path.div
 
@@ -33,11 +27,14 @@ import kotlin.io.path.div
 object ClientMumbleLinkMod : ClientModInitializer {
     // Config files
     private val configFile = MainMumbleLinkMod.configFolder / "fabric-mumblelink-mod-client.json"
+    private val json =
+        Json {
+            prettyPrint = true
+            ignoreUnknownKeys = true
+        }
 
     // Configs
     lateinit var config: ClientConfig
-    lateinit var configTree: ConfigBranch
-    lateinit var unionConfigTree: ConfigBranch
 
     private var mumble: MumbleLink? = null
 
@@ -52,48 +49,38 @@ object ClientMumbleLinkMod : ClientModInitializer {
     private fun setupConfig() {
         config = ClientConfig()
 
-        configTree =
-            ConfigTree
-                .builder()
-                .applyFromPojo(config, createSettings())
-                .withName("client")
-                .build()
-        unionConfigTree = ConfigBranchImpl("union", null)
-        unionConfigTree.items.add(configTree)
-        unionConfigTree.items.add(MainMumbleLinkMod.configTree)
-
-        if (Files.notExists(configFile)) {
+        if (Files.exists(configFile)) {
+            deserialize()
+        } else {
             serialize()
         }
-
-        // Verify save worked
-        deserialize()
     }
 
     fun serialize() {
-        FiberSerialization.serialize(
-            configTree,
-            Files.newOutputStream(configFile, WRITE, CREATE),
-            SERIALIZER,
-        )
+        val serialized = json.encodeToString(config)
+        Files.writeString(configFile, serialized, WRITE, CREATE, java.nio.file.StandardOpenOption.TRUNCATE_EXISTING)
     }
 
     private fun deserialize() {
-        FiberSerialization.deserialize(
-            configTree,
-            Files.newInputStream(configFile, READ),
-            SERIALIZER,
-        )
+        try {
+            config = json.decodeFromString(Files.readString(configFile, java.nio.charset.StandardCharsets.UTF_8))
+        } catch (e: SerializationException) {
+            val backup = configFile.resolveSibling("${configFile.fileName}.corrupt")
+            runCatching { Files.move(configFile, backup, java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+            LOG.error("Client config was corrupted and could not be parsed. Backed it up to {} and regenerated defaults.", backup, e)
+            config = ClientConfig()
+            serialize()
+        }
     }
 
     private fun setupEvents() {
-        PayloadTypeRegistry.playC2S().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
-        PayloadTypeRegistry.playS2C().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
-        ClientPlayNetworking.registerGlobalReceiver(SendMumbleURL.PACKET_ID, SendMumbleURL)
+        PayloadTypeRegistry.serverboundPlay().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
+        PayloadTypeRegistry.clientboundPlay().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
+        ClientPlayNetworking.registerGlobalReceiver(SendMumbleURL.PACKET_ID, SendMumbleURL::receive)
 
         ClientTickEvents.START_CLIENT_TICK.register(
             ClientTickEvents.StartTick {
-                val world = it.world
+                val world = it.level
                 val player = it.player
 
                 if (world != null && player != null) {
@@ -105,9 +92,11 @@ object ClientMumbleLinkMod : ClientModInitializer {
                     // Vec3 topDirection = game.player.getUpVector();
 		
                     // Fabric implementation :
-                    val position = player.getCameraPosVec(1.0f)
-                    val lookDirection = player.rotationVecClient
-                    val topDirection = player.getOppositeRotationVector(1.0f)
+                    val position = player.position()
+                    val lookDirection = player.lookAngle
+                    val topDirection =
+                        net.minecraft.world.phys
+                            .Vec3(0.0, 1.0, 0.0)
 
                     // Convert to right-handed coordinate system.
                     val camPos = position.toRHArray
@@ -115,7 +104,7 @@ object ClientMumbleLinkMod : ClientModInitializer {
                     val camTop = topDirection.toRHArray
 
                     // Make people in other dimensions far away so that they're muted.
-                    camPos[2] += (world.registryKey.value.stableHash % 2048) * config.clientDimensionYAxisAdjust
+                    camPos[2] += (world.dimension().toString().stableHash % 2048) * config.clientDimensionYAxisAdjust
 
                     mumble.uiVersion = 2
                     mumble.uiTick++

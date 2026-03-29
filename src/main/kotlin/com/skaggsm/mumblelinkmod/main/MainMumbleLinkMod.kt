@@ -1,22 +1,17 @@
 package com.skaggsm.mumblelinkmod.main
 
-import com.skaggsm.mumblelinkmod.ServerOnChangeWorldCallback
-import com.skaggsm.mumblelinkmod.ServerOnConnectCallback
-import com.skaggsm.mumblelinkmod.ServerOnTeamsModify
-import io.github.fablabsmc.fablabs.api.fiber.v1.annotation.AnnotatedSettings
-import io.github.fablabsmc.fablabs.api.fiber.v1.serialization.FiberSerialization
-import io.github.fablabsmc.fablabs.api.fiber.v1.serialization.JanksonValueSerializer
-import io.github.fablabsmc.fablabs.api.fiber.v1.tree.ConfigBranch
-import io.github.fablabsmc.fablabs.api.fiber.v1.tree.ConfigTree
-import me.shedaniel.fiber2cloth.api.Fiber2Cloth
-import net.fabricmc.api.EnvType
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.registry.RegistryKey
+import net.minecraft.resources.ResourceKey
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.world.World
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.Level
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.nio.file.Files
@@ -33,14 +28,17 @@ object MainMumbleLinkMod : ModInitializer {
     // Common constants
     const val MODID: String = "fabric-mumblelink-mod"
     val LOG: Logger = LogManager.getLogger(MODID)
-    val SERIALIZER = JanksonValueSerializer(false)
+    private val JSON =
+        Json {
+            prettyPrint = true
+            ignoreUnknownKeys = true
+        }
     val configFolder: Path = FabricLoader.getInstance().configDir
 
     // Config files
     private val configFile = configFolder / "fabric-mumblelink-mod-main.json"
 
     lateinit var config: MainConfig
-    lateinit var configTree: ConfigBranch
 
     override fun onInitialize() {
         setupConfig()
@@ -50,83 +48,53 @@ object MainMumbleLinkMod : ModInitializer {
     private fun setupConfig() {
         config = MainConfig()
 
-        configTree =
-            ConfigTree
-                .builder()
-                .applyFromPojo(config, createSettings())
-                .withName("main")
-                .build()
-
-        if (Files.notExists(configFile)) {
+        if (Files.exists(configFile)) {
+            deserialize()
+        } else {
             serialize()
         }
-
-        // Verify save worked
-        deserialize()
-    }
-
-    fun createSettings(): AnnotatedSettings {
-        val settingsBuilder = AnnotatedSettings.builder()
-        if (FabricLoader.getInstance().environmentType == EnvType.CLIENT) {
-            Fiber2Cloth.configure(settingsBuilder)
-        }
-        return settingsBuilder.build()
     }
 
     fun serialize() {
-        FiberSerialization.serialize(
-            configTree,
-            Files.newOutputStream(configFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE),
-            SERIALIZER,
-        )
+        val serialized = JSON.encodeToString(config)
+        Files.writeString(configFile, serialized, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
     }
 
     private fun deserialize() {
-        FiberSerialization.deserialize(
-            configTree,
-            Files.newInputStream(configFile, StandardOpenOption.READ),
-            SERIALIZER,
-        )
+        try {
+            config = JSON.decodeFromString(Files.readString(configFile, java.nio.charset.StandardCharsets.UTF_8))
+        } catch (e: SerializationException) {
+            val backup = configFile.resolveSibling("${configFile.fileName}.corrupt")
+            runCatching { Files.move(configFile, backup, java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+            LOG.error("Main config was corrupted and could not be parsed. Backed it up to {} and regenerated defaults.", backup, e)
+            config = MainConfig()
+            serialize()
+        }
     }
 
     private fun setupEvents() {
-        ServerOnConnectCallback.EVENT.register(
-            ServerOnConnectCallback { player ->
-                sendVoipPacket(player)
-            },
-        )
+        ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
+            sendVoipPacket(handler.player)
+        }
 
-        ServerOnChangeWorldCallback.EVENT.register(
-            ServerOnChangeWorldCallback { toWorld, player ->
-                sendVoipPacket(player, toWorld)
-            },
-        )
-
-        ServerOnTeamsModify.EVENT.register(
-            ServerOnTeamsModify { _, server ->
-                sendAllVoipPackets(server)
-            },
-        )
+        ServerTickEvents.END_SERVER_TICK.register { server ->
+            sendAllVoipPackets(server)
+        }
     }
 
     private fun sendAllVoipPackets(server: MinecraftServer) {
-        server.playerManager.playerList.forEach { sendVoipPacket(it) }
+        server.playerList.players.forEach { sendVoipPacket(it) }
     }
 
     private fun sendVoipPacket(
-        player: ServerPlayerEntity,
-        toWorld: RegistryKey<World> = player.entityWorld.registryKey,
+        player: ServerPlayer,
+        toWorld: ResourceKey<Level> = player.level().dimension(),
     ) {
-        if (player.networkHandler == null) {
-            LOG.warn("Attempted to send VoIP packet to ${player.name.string} but their network handler is null. Skipping.")
-            return
-        }
-
         LOG.trace("Updating VoIP location for ${player.name.string}!")
 
-        val dim = toWorld.value
+        val dim = toWorld.toString()
         val dimNamespace =
-            dim.namespace.split('_').joinToString(" ") {
+            dim.substringBefore(':').split('_').joinToString(" ") {
                 it.replaceFirstChar { c ->
                     if (c.isLowerCase()) {
                         c.titlecase(
@@ -138,7 +106,7 @@ object MainMumbleLinkMod : ModInitializer {
                 }
             }
         val dimPath =
-            dim.path.split('_').joinToString(" ") {
+            dim.substringAfter(':').split('_').joinToString(" ") {
                 it.replaceFirstChar { c ->
                     if (c.isLowerCase()) {
                         c.titlecase(
@@ -151,7 +119,7 @@ object MainMumbleLinkMod : ModInitializer {
             }
         val dimId = "$dimNamespace $dimPath"
 
-        val teamName = player.scoreboardTeam?.name ?: ""
+        val teamName = player.team?.name ?: ""
 
         val templateParams: Array<Any> = arrayOf(dimId, dimNamespace, dimPath, teamName)
 
