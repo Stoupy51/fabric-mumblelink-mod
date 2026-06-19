@@ -14,7 +14,7 @@
 
 Connects Minecraft with positional audio systems like **🎧 Mumble** and **🗣️ TeamSpeak** for immersive voice chat. This mod links player location and orientation to external voice clients, enabling realistic spatial audio in multiplayer (similar to how mods like Simple Voice Chat provide proximity-based communication, but using external VoIP tools).
 
-This fork updates the mod for the **🆕 latest Minecraft versions** using the **🧵 Fabric** loader, and works seamlessly with players using clients like **🌙 Lunar Client** and **🦁 BadlionClient**.
+This fork updates the mod for the **🆕 latest Minecraft versions** using the **🧵 Fabric** loader, and works seamlessly with players using clients like **🌙 Lunar Client**, **🐺 LabyMod**, **🦁 BadlionClient**, etc.
 
 ## ✨ Extra Features in This Fork
 

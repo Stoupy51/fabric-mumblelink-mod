@@ -92,11 +92,9 @@ object ClientMumbleLinkMod : ClientModInitializer {
                     // Vec3 topDirection = game.player.getUpVector();
 		
                     // Fabric implementation :
-                    val position = player.position()
+                    val position = player.getEyePosition(1.0f)
                     val lookDirection = player.lookAngle
-                    val topDirection =
-                        net.minecraft.world.phys
-                            .Vec3(0.0, 1.0, 0.0)
+                    val topDirection = player.getUpVector(1.0f)
 
                     // Convert to right-handed coordinate system.
                     val camPos = position.toRHArray
