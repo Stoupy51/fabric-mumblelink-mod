@@ -70,12 +70,15 @@ data class SendMumbleURL(
             if (ClientMumbleLinkMod.config.clientAutoLaunchOption == AutoLaunchOption.IGNORE) return
 
             val voipClient = payload.voipClient
-            val userinfo = payload.userinfo
-            val host = payload.host
+            // Blank components must be null, otherwise the URI keeps their separators (e.g. "mumble://@?#") and fails to parse.
+            val userinfo = payload.userinfo.ifBlank { null }
+            val host = payload.host.ifBlank { null }
             val port = payload.port
-            val path = payload.path
-            val query = payload.query
-            val fragment = payload.fragment
+            val path = payload.path.ifBlank { null }
+            val query = payload.query.ifBlank { null }
+            val fragment = payload.fragment.ifBlank { null }
+
+            if (host == null) return
 
             try {
                 val uri = URI(voipClient.scheme, userinfo, host, port, path, query, fragment)

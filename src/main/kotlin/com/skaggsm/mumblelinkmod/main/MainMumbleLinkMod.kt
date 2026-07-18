@@ -90,6 +90,9 @@ object MainMumbleLinkMod : ModInitializer {
         player: ServerPlayer,
         toWorld: ResourceKey<Level> = player.level().dimension(),
     ) {
+        // No VoIP server configured (the default, e.g. in singleplayer), so there's nothing to point the client at.
+        if (config.voipServerHost.isBlank()) return
+
         LOG.trace("Updating VoIP location for ${player.name.string}!")
 
         val dim = toWorld.toString()
