@@ -20,6 +20,7 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.text.MessageFormat
 import java.util.Locale
+import java.util.UUID
 import kotlin.io.path.div
 
 /**
@@ -40,6 +41,8 @@ object MainMumbleLinkMod : ModInitializer {
     private val configFile = configFolder / "fabric-mumblelink-mod-main.json"
 
     lateinit var config: MainConfig
+
+    private val lastSentUrls = mutableMapOf<UUID, SendMumbleURL>()
 
     override fun onInitialize() {
         setupConfig()
@@ -76,8 +79,8 @@ object MainMumbleLinkMod : ModInitializer {
     private fun setupEvents() {
         PayloadTypeRegistry.clientboundPlay().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
 
-        ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
-            sendVoipPacket(handler.player)
+        ServerPlayConnectionEvents.DISCONNECT.register { handler, _ ->
+            lastSentUrls.remove(handler.player.uuid)
         }
 
         ServerTickEvents.END_SERVER_TICK.register { server ->
@@ -95,8 +98,6 @@ object MainMumbleLinkMod : ModInitializer {
     ) {
         // No VoIP server configured (the default, e.g. in singleplayer), so there's nothing to point the client at.
         if (config.voipServerHost.isBlank()) return
-
-        LOG.trace("Updating VoIP location for ${player.name.string}!")
 
         val dim = toWorld.toString()
         val dimNamespace =
@@ -132,7 +133,6 @@ object MainMumbleLinkMod : ModInitializer {
         val path: String = MessageFormat.format(config.voipServerPath, *templateParams)
         val query: String = MessageFormat.format(config.voipServerQuery, *templateParams)
 
-        // val payload = CustomPayload(SendMumbleURL.ID, buf)
         val payload =
             SendMumbleURL(
                 config.voipClient,
@@ -143,6 +143,9 @@ object MainMumbleLinkMod : ModInitializer {
                 query,
                 config.voipServerFragment,
             )
+        // Every send makes the client open its VoIP client, so only send when the URL changes.
+        if (lastSentUrls.put(player.uuid, payload) == payload) return
+        LOG.debug("Sending VoIP URL to ${player.name.string}")
         ServerPlayNetworking.send(player, payload)
     }
 }
