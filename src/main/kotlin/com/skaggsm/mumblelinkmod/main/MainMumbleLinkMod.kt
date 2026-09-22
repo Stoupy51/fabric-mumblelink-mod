@@ -5,6 +5,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.fabricmc.loader.api.FabricLoader
@@ -73,6 +74,8 @@ object MainMumbleLinkMod : ModInitializer {
     }
 
     private fun setupEvents() {
+        PayloadTypeRegistry.clientboundPlay().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
+
         ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
             sendVoipPacket(handler.player)
         }

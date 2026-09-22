@@ -13,7 +13,6 @@ import net.fabricmc.api.EnvType.CLIENT
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import org.lwjgl.system.Platform
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption.CREATE
@@ -74,8 +73,6 @@ object ClientMumbleLinkMod : ClientModInitializer {
     }
 
     private fun setupEvents() {
-        PayloadTypeRegistry.serverboundPlay().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
-        PayloadTypeRegistry.clientboundPlay().register(SendMumbleURL.PACKET_ID, SendMumbleURL.PACKET_CODEC)
         ClientPlayNetworking.registerGlobalReceiver(SendMumbleURL.PACKET_ID, SendMumbleURL::receive)
 
         ClientTickEvents.START_CLIENT_TICK.register(
